@@ -1,0 +1,84 @@
+.jopier-button button, .jopier-form label, .jopier-form input, .jopier-form textarea, .jopier-form span {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.jopier-form-control label, .jopier-form-control input[type=text], .jopier-form-control textarea {
+    font-size: 12px;
+    width: 100%;
+}
+
+.jopier-form-control input[type=submit], .jopier-form-control input[type=button] {
+    font-size: 12px;
+    background-color: #001888;
+    color: white;
+}
+
+.jopier-form span {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.jopier-form label {
+    font-weight: bold;
+}
+
+.jopier-form input {
+    resize: none;
+ }
+
+.jopier-form textarea {
+    resize: both; /* Javascript sizes */
+    height: 200px;
+}
+
+.jopier-form-title {
+    text-align: center;
+}
+
+.jopier-form-container {
+    padding: 5px;
+}
+
+.jopier-form-control {
+    padding-right: 5px;
+}
+
+.jopier-form-buttons {
+    text-align:center;
+}
+
+.jopier-button {
+    position:absolute;
+    left: -10px;
+    top: -25px;
+    font-size: 10px;
+    background-color: #001888;
+    color: white;
+    z-index: 1000;
+}
+
+.jopier-target {
+    border-color: #001888;
+    border-style: dotted;
+    border-width: 1px;
+    padding: 5px;
+}
+.jopier-target-hover {
+    color: black;
+    background-color: #aab2e8;
+    border-style: solid;
+}
+.jopier-form {
+    position:absolute;
+    width : 350px;
+    height : 315px;
+/*    padding : 5px;*/
+    resize : both;
+    overflow: auto;
+    border-style: solid;
+    border-width: 1px;
+    border-color: black;
+    background-color: #aab2e8;
+    color: black;
+    z-index: 1000;
+}
