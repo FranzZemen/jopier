@@ -1,4 +1,4 @@
-# jopier
+# jopier  DO NOT CLONE DEVELOPMENT IN PROGESS (UNUSABLE)
 
 ## Usage
 
