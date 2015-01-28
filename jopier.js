@@ -93,7 +93,7 @@
             // ==============
             // Jopier Service
             // ==============
-            function JopierService($q, $http, $timeout) {
+            function JopierService($q, $http, $timeout, $rootScope) {
                 var cachedContent = {};
                 var authToken;
                 var preloading = false;
@@ -204,6 +204,7 @@
                             resolvedContent = resolvedContent[pathToContent[i]];
                         }
                         resolvedContent[pathToContent[pathToContent.length - 1]] = updatedContent;
+                        $rootScope.$broadcast('jopier-update', key);
                     } else {
                         pathToContent = key.split('.');
                         resolvedContent = cachedContent;
@@ -224,8 +225,8 @@
             }
 
 
-            this.$get = ['$q', '$http', '$timeout', function ($q, $http, $timeout) {
-                return new JopierService($q, $http, $timeout);
+            this.$get = ['$q', '$http', '$timeout', '$rootScope', function ($q, $http, $timeout, $rootScope) {
+                return new JopierService($q, $http, $timeout, $rootScope);
             }];
         }
     )
@@ -260,15 +261,29 @@
                     }
 
                     // Now for the magic; set the contet...
-                    $jopier.content(scope.key).then(
-                        function (content) {
-                            element.html(content);
-                        },
-                        function (err) {
-                            console.log(err);
-                            element.html('Error loading content for key (see console logs): ' + key);
+                    setContent();
+                    function setContent() {
+                        $jopier.content(scope.key).then(
+                            function (content) {
+                                if (content.indexOf('No content found') === 0 && scope.attachTo.html().trim().length > 0) {
+                                    // Do nothing. The content will be the element html
+                                } else {
+                                    element.html(content);
+                                }
+                            },
+                            function (err) {
+                                console.log(err);
+                                element.html('Error loading content for key (see console logs): ' + scope.key);
+                            }
+                        );
+                    };
+
+                    var deregisterUpdate = scope.$on('jopier-update', function (event,updatedKey) {
+                        // Handle more than one element having the same key.
+                        if (scope.key === updatedKey) {
+                            setContent();
                         }
-                    );
+                    });
 
                     var deregisterHide = scope.$on('jopier-hide', function () {
                         element.removeClass('jopier-target');
@@ -300,7 +315,11 @@
                         scope.renderForm = true;
                         $jopier.content(scope.key).then(
                             function (content) {
-                                scope.content = content;
+                                if (content.indexOf('No content found') === 0 && scope.attachTo.html().trim().length > 0) {
+                                    scope.content = scope.attachTo.html().trim();
+                                } else {
+                                    scope.content = content;
+                                }
                             },
                             function (err) {
                                 scope.content = 'Error getting content, check console log: ' + err.message;
@@ -313,6 +332,7 @@
                     element.on('$destroy', function () {
                         deregisterHide();
                         deregisterShow();
+                        deregisterUpdate();
                     });
                 }
             };
