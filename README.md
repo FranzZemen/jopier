@@ -61,9 +61,9 @@ Skip any that you already have
            var jopier = new (require('jopier-rest'))();
   2. Add the jopier middleware to Express wherever you'd like (app or route level).  The order is important.  The getPath is more specific than the allPath so it must come first.
          
-         app.get(jopier.getPath()).get(jopier.get);
-         app.get(jopier.allPath()).get(jopier.all);
-         app.post(jopier.postPath()).post(jopier.post);
+         app.get(jopier.getPath(),jopier.get);
+         app.get(jopier.allPath(),jopier.all);
+         app.post(jopier.postPath(),jopier.post);
 
 **Front End**
   1. Get jopier (bower is recommended - it points to the lastest stable tag)
