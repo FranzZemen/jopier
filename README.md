@@ -4,7 +4,7 @@
 Jopier is a lightweight end to end Content Management System (CMS) for use in websites 
 web applications and hybrid apps.
 
-It consists of both a front end, pubished on Bower as 'jopier', and a back end, published on NPM as jopierREST.  Both can be used independently with custom implementations providing 'the other side' but it is likely that most users will simply use jopier and jopierREST.
+It consists of both a front end, pubished on Bower as 'jopier', and a back end, published on NPM as jopier-rest.  Both can be used independently with custom implementations providing 'the other side' but it is likely that most users will simply use jopier and jopier-rest.
 
 The front end is built in Angular (currently supporting 1.3.x).  Therefore, the ideal client is an angular website, web app or hybrid app.  However, many clients not currently using Angular can easily incorporate it.  If this is the case and you are new to Angular there is a minimal install section in this document.
 
@@ -27,8 +27,8 @@ The front end is built in Angular (currently supporting 1.3.x).  Therefore, the 
   9. Multple elements can have the same content.  An edit to one results in an update to all.
   10. Content keys can be expressions, thus changing the content based on the key.
 
-**jopierREST** (back end)
-  1. Ability to define hierarchical content keys.  Hierarchical content keys are stored hierarchically in jopierREST.
+**jopier-rest** (back end)
+  1. Ability to define hierarchical content keys.  Hierarchical content keys are stored hierarchically in jopier-rest.
   2. MongoDB storage
   3. Ability to segregate content for different sites or endpoints
   4. Can be replaced with any other custom REST implementation.  Nothing magic about internals.
@@ -51,14 +51,14 @@ Skip any that you already have
 
 ### Usage
 **Server Side**
-  1. Install jopierREST 
+  1. Install jopier-rest 
      * Install from npm 
-           npm install jopierREST --save
+           npm install jopier-rest --save
      * Require and setup in module where you add middleware (for example, in angular-fullstack that's either app.js or routes.js)
-           var Jopier = require('jopierREST')
+           var Jopier = require('jopier-rest')
            var jopier = new Jopier();
            // or
-           var jopier = new (require('jopierREST'))();
+           var jopier = new (require('jopier-rest'))();
   2. Add the jopier middleware to Express wherever you'd like (app or route level)
          app.use(jopier.allPath()).get(jopier.all);
          app.use(jopier.getPath()).get(jopier.get);
@@ -136,7 +136,7 @@ The $jopier service has the following methods intended for client usage:
   - **$jopier.authToken(token)**:  
    - Allows the client to inject an optional authToken into the service so that any content updates can be authenticated/authorized on the server side.  Content requests are not authenticated at this time (they are the equivalent as getting your html).  
    - You should initialize this value in a controller or other service, so that it is set prior to a user actually initiating a change.  Your client is responsible for authenticating against your server and obtaining whatever authentication token you required, so you'd likely set this prior to the user editing content but just on/after successful authentication.  
-   - The token is passed as json in the body, and thus available on your server side for whatever authorization middleware you use.  jopierREST does nothing with this token.  Since it is represented by json, you can pass just about anything.
+   - The token is passed as json in the body, and thus available on your server side for whatever authorization middleware you use.  jopier-rest does nothing with this token.  Since it is represented by json, you can pass just about anything.
    - No return value
 
 #### Provider $jopierProvider
@@ -273,9 +273,9 @@ The $jopierProvider allows you to perform site specific configuration.  It conta
         z-index: 1000;
     }
 
-### Server Side (jopierREST)
+### Server Side (jopier-rest)
 #### Install
-    npm install jopierREST --save
+    npm install jopier-rest --save
 
 #### Jopier Class
 Class interface, one instance per configuration.  Normally you'd just have one instance
@@ -307,7 +307,7 @@ Usage in Express is straightfoward.  The Jopier class exposes a path for each op
 
 #### REST Interface
 
-You don't need to worry about the mongo database if you use the optional jopierREST backend.  However, it is documented here if needed.  Note that a custom implementatoin can change the paths.
+You don't need to worry about the mongo database if you use the optional jopier-rest backend.  However, it is documented here if needed.  Note that a custom implementatoin can change the paths.
 
 ##### Get All Content API
 
@@ -321,12 +321,12 @@ You don't need to worry about the mongo database if you use the optional jopierR
    - Status 200 if found, status 404 if content not found with specific message "No content found" to distinguish from an endpoint not found, status 500 - server error
 
   - **POST /jopier/:key**
-   - Saves the specific content.  The body is json and contains {content: 'content'} and the key is the path parameter.  Note that the client can also send other stuff such as the authToken, but jopierREST middleware does not concern itself with that.
+   - Saves the specific content.  The body is json and contains {content: 'content'} and the key is the path parameter.  Note that the client can also send other stuff such as the authToken, but jopier-rest middleware does not concern itself with that.
    - Status 200 if successful.  Status 400 if body or key are empty or missing.   
    
 #### Mongo Database Schema
 
-You don't need to worry about the mongo database if you use the optional jopierREST backend.  However, it is documented here if needed.  Basically there are two required fields, namely siteKey and content.  siteKey stores the key that was provided either optionally or by default. This is so that those wanting to segregate content somehow into different document instances can do so.   The content fields contains any number of keys, which may be hierarchical.  For instance below, the key KEY_LEVEL_2.KEY_LEVEL_3.KEY_3 is three levels deep and points to 'Some Content 3'.
+You don't need to worry about the mongo database if you use the optional jopier-rest backend.  However, it is documented here if needed.  Basically there are two required fields, namely siteKey and content.  siteKey stores the key that was provided either optionally or by default. This is so that those wanting to segregate content somehow into different document instances can do so.   The content fields contains any number of keys, which may be hierarchical.  For instance below, the key KEY_LEVEL_2.KEY_LEVEL_3.KEY_3 is three levels deep and points to 'Some Content 3'.
 
     {
         "siteKey" : "/jopier",
@@ -360,4 +360,4 @@ A partial product backlog is provided here.  These are the public facing epics o
     
     
     
-    
+ 
