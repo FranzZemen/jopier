@@ -77,14 +77,23 @@ Skip any that you already have
             'other modules....']);
   4. Add a control to turn jopier on or off.  You can add the example button or use an existing menu system. 
          <button ng-click="toggleJopier()">Toggle Jopier</button>
-  5. Provide the implementation for toggleJoppier() in a controller or directive, at your option:
-         $scope.toggleJopier = function() {
-              if ($('.jopier-button').is(':visible')) {
-                  $scope.$root.$broadcast('jopier-hide');
-              } else {
-                  $scope.$root.$broadcast('jopier-show');
-              }
-          };
+  5. Provide the implementation for toggleJoppier() in a controller or directive, at your option.  :
+  
+        (function() {
+            'use strict';
+
+            angular.module('someApp')
+                .controller('someController', ['$scope','$jopier', function ($scope, $jopier) {
+                    $scope.toggleJopier = function () {
+                        if ($jopier.active()) {
+                            $jopier.toggleActive(false);
+                        } else {
+                            $jopier.toggleActive(true);
+                        }
+                    };
+            }]);
+        })();
+
   6. Select an html element you want content managed.  Add the jopier attribute directive with a key.
           <span jopier="INTRO">This was text that was there before Jopier</span>
   7. Build and deploy your front end in whichever way you normally do.
@@ -137,7 +146,15 @@ The $jopier service has the following methods intended for client usage:
    - Allows the client to inject an optional authToken into the service so that any content updates can be authenticated/authorized on the server side.  Content requests are not authenticated at this time (they are the equivalent as getting your html).  
    - You should initialize this value in a controller or other service, so that it is set prior to a user actually initiating a change.  Your client is responsible for authenticating against your server and obtaining whatever authentication token you required, so you'd likely set this prior to the user editing content but just on/after successful authentication.  
    - The token is passed as json in the body, and thus available on your server side for whatever authorization middleware you use.  jopier-rest does nothing with this token.  Since it is represented by json, you can pass just about anything.
+   - returns Self
+   
+  - **$jopier.toggleActive(onOff)**:
+   - Allows client to turn on/off cms editing
    - No return value
+   - Returns self
+  - **jopier.active()**:
+   - Returns the current cms editing state (on = true)
+   
 
 #### Provider $jopierProvider
 The $jopierProvider allows you to perform site specific configuration.  It contains the following methods:

@@ -97,6 +97,7 @@
                 var cachedContent = {};
                 var authToken;
                 var preloading = false;
+                var active = false;
 
                 if (preload) {
                     preloading = true;
@@ -121,6 +122,19 @@
                 };
                 this.authToken = function (token) {
                     authToken = token;
+                    return this;
+                };
+                this.active = function () {
+                    return active;
+                };
+                this.toggleActive = function (onOff) {
+                    active = onOff;
+                    if (active) {
+                        $rootScope.$broadcast('jopier-show');
+                    } else {
+                        $rootScope.$broadcast('jopier-hide');
+                    }
+                    return this;
                 };
                 this.content = function (key, content) {
                     var self = this;
@@ -262,6 +276,9 @@
 
                     // Now for the magic; set the contet...
                     setContent();
+
+                    activate($jopier.active());
+
                     function setContent() {
                         $jopier.content(scope.key).then(
                             function (content) {
@@ -285,16 +302,25 @@
                         }
                     });
 
+                    function activate (onOff) {
+                        if (onOff) {
+                            createButton();
+                            element.addClass('jopier-target');
+                            scope.renderButton = true;
+
+                        } else {
+                            element.removeClass('jopier-target');
+                            scope.renderButton = false;
+                            scope.renderForm = false;
+                        }
+                    }
+
                     var deregisterHide = scope.$on('jopier-hide', function () {
-                        element.removeClass('jopier-target');
-                        scope.renderButton = false;
-                        scope.renderForm = false;
+                        activate(false);
                     });
 
                     var deregisterShow = scope.$on('jopier-show', function () {
-                        createButton();
-                        element.addClass('jopier-target');
-                        scope.renderButton = true;
+                        activate(true);
                     });
 
                     function createButton() {
