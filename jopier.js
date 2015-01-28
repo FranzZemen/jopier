@@ -341,7 +341,7 @@
                         scope.renderForm = true;
                         $jopier.content(scope.key).then(
                             function (content) {
-                                if (content.indexOf('No content found') === 0 && scope.attachTo.html().trim().length > 0) {
+                                if ((!content || content.indexOf('No content found')) === 0 && scope.attachTo.html().trim().length > 0) {
                                     scope.content = scope.attachTo.html().trim();
                                 } else {
                                     scope.content = content;
