@@ -59,10 +59,11 @@ Skip any that you already have
            var jopier = new Jopier();
            // or
            var jopier = new (require('jopier-rest'))();
-  2. Add the jopier middleware to Express wherever you'd like (app or route level)
-         app.use(jopier.allPath()).get(jopier.all);
-         app.use(jopier.getPath()).get(jopier.get);
-         app.use(jopier.postPath()).post(jopier.post);
+  2. Add the jopier middleware to Express wherever you'd like (app or route level).  The order is important.  The getPath is more specific than the allPath so it must come first.
+         
+         app.get(jopier.getPath()).get(jopier.get);
+         app.get(jopier.allPath()).get(jopier.all);
+         app.post(jopier.postPath()).post(jopier.post);
 
 **Front End**
   1. Get jopier (bower is recommended - it points to the lastest stable tag)
@@ -321,12 +322,18 @@ Usage in Express is straightfoward.  The Jopier class exposes a path for each op
    -  The mongo collection to use.
    -  Default is jopier
 
+##### Methods
+
+  - **Jopier.getPath(), Jopier.allPath(), Jopier.postPath()**
+   - These three methods are for includsion in app.get/post or app.route.get/post respectively, per the quick usage example above.  The order matters as the only difference
+   between the getPath and the allPath is a path parameter.
+  - **Jopier.get(), Jopier,all(), Jopier.post()**  
+   - These three method are the implementations for Express, per the quick usage example above.  They correspond to the path counterparts.
+
 
 #### REST Interface
 
 You don't need to worry about the mongo database if you use the optional jopier-rest backend.  However, it is documented here if needed.  Note that a custom implementatoin can change the paths.
-
-##### Get All Content API
 
   - **GET /jopier **
    - Returns the full hierarchical JSON document as defined in the mongo section below
