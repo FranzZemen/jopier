@@ -25,7 +25,7 @@
 
     angular.module('jopier', [])
         // ===============
-        // Jopier Provider
+        // Jopier Providr
         // ===============
         .provider('$jopier', function () {
 
@@ -64,7 +64,11 @@
             };
 
             this.preload = function (trueOrFalse) {
-                preload = trueOrFalse;
+                if (trueOrFalse) {
+                    preload = trueOrFalse;
+                } else {
+                    return preload;
+                }
             };
 
             this.setRestPath = function (path) {
@@ -89,90 +93,101 @@
             // ==============
             // Jopier Service
             // ==============
-            function JopierService($q, $http) {
-                var self = this; // Disable warning in ide on using this.
-
+            function JopierService($q, $http, $timeout) {
                 var cachedContent = {};
                 var authToken;
+                var preloading = false;
 
                 if (preload) {
+                    preloading = true;
+                    var start = Date.now();
                     $http.get(restPath).
                         success(function (data, status, headers, config) {
                             cachedContent = data;
+                            preloading = false;
+                            console.log('Preload millis: ' + (Date.now()-start));
                         }).error(function (data, status, headers, config) {
                             var err = new Error('Could not preload (' + status + '): ' + data);
                             console.log(err);
+                            preloading = false;
+                            console.log('Preload millis: ' + (Date.now()-start));
                         });
                 }
-                self.formTemplate = function () {
+                this._formTemplate = function () {
                     return formTemplate;
                 };
-                self.buttonTemplate = function () {
+                this._buttonTemplate = function () {
                     return buttonTemplate;
                 };
-                self.authToken = function (token) {
+                this.authToken = function (token) {
                     authToken = token;
                 };
-                self.synchronousContent = function (key) {
-                    var resolvedContent = cache(key);
-                    if (resolvedContent) {
-                        return resolvedContent;
-                    } else if (!preload) {
-                        return 'Cannot get content synchronously and preload set to false';
-                    } else {
-                        return key;
-                    }
-                };
-                self.content = function (key, content) {
+                this.content = function (key, content) {
+                    var self = this;
+                    var start = Date.now();
                     if (content) {
-                        return $q(function serviceGetContentSuccess(resolve, reject) {
-                            var uri = restPath + '/' + key + (authToken ? '?authToken=' + authToken : '');
-                            $http.post(uri, {content: content}).
+                        return $q(function serviceSaveContent(resolve, reject) {
+                            var uri = restPath + '/' + key;
+                            $http.post(uri, {content: content, authToken: authToken}).
                                 success(function (data, status, headers, config) {
                                     cache(key, content);
+                                    console.log('Post Content millis: ' + (Date.now()-start));
                                     resolve('Success');
                                 }).error(function (data, status, headers, config) {
-
                                     var err = new Error('Status ' + status + ': ' + data.message);
                                     reject(err);
                                 });
                         });
                     } else {
-                        return $q(function serviceGetContentError(resolve, reject) {
-                            var resolvedContent = cache(key);
-                            if (resolvedContent) {
-                                resolve(resolvedContent);
-                            }
-                            if (!resolvedContent) {
-                                var uri = restPath + '/' + key + (authToken ? '?authToken=' + authToken : '');
-                                $http.get(uri).
-                                    success(function (data, status, headers, config) {
-                                        cache(key, data.content);
-                                        resolve(data.content);
-                                    }).error(function (data, status, headers, config) {
-                                        if (status == 404 && typeof data === 'string' && data.indexOf('No content found for key') === 0) {
-                                            resolve('No content found for key ' + key + '. To add entry, replace this message with content and save');
-                                        } else {
-                                            var err = new Error('Status ' + status + ': ' + data.message);
-                                            reject(err);
+                        return $q(function serviceGetContent(resolve, reject) {
+                            (function delayLoading() {
+                                var delay = preloading ? 25 : 0;
+                                $timeout(function () {
+                                    if (preloading) {
+                                        delayLoading();
+                                    } else {
+                                        var resolvedContent = cache(key);
+                                        if (resolvedContent) {
+                                            console.log('Get Content (Cache) millis: ' + (Date.now()-start));
+                                            resolve(resolvedContent);
                                         }
-                                    });
-                            }
+                                        if (!resolvedContent) {
+                                            var uri = restPath + '/' + key;
+                                            $http.get(uri).
+                                                success(function (data, status, headers, config) {
+                                                    cache(key, data.content);
+                                                    console.log('Get Content millis: ' + (Date.now()-start));
+                                                    resolve(data.content);
+                                                }).error(function (data, status, headers, config) {
+                                                    if (status == 404 && typeof data === 'string' && data.indexOf('No content found for key') === 0) {
+                                                        resolve('No content found for key ' + key + '. To add entry, replace this message with content and save');
+                                                    } else {
+                                                        var err = new Error('Status ' + status + ': ' + data.message);
+                                                        reject(err);
+                                                    }
+                                                });
+                                        }
+                                    }
+                                },delay);
+                            })();
                         });
                     }
                 };
-                self.buttonOffsetLeftPixels = function () {
+
+
+                this._buttonOffsetLeftPixels = function () {
                     return buttonOffsetLeftPixels;
                 };
-                self.buttonOffsetTopPixels = function () {
+                this._buttonOffsetTopPixels = function () {
                     return buttonOffsetTopPixels;
                 };
-                self.formOffsetLeftPixels = function () {
+                this._formOffsetLeftPixels = function () {
                     return formOffsetLeftPixels;
                 };
-                self.formOffsetTopPixels = function () {
+                this._formOffsetTopPixels = function () {
                     return formOffsetTopPixels;
                 };
+
 
                 function cache(key, updatedContent) {
                     var pathToContent;
@@ -209,14 +224,16 @@
             }
 
 
-            this.$get = ['$q', '$http', function ($q, $http) {
-                return new JopierService($q, $http);
+            this.$get = ['$q', '$http', '$timeout', function ($q, $http, $timeout) {
+                return new JopierService($q, $http, $timeout);
             }];
-        })
+        }
+    )
         // ================
         // Jopier Directive
         // ================
-        .directive('jopier', ['$compile', '$jopier', '$interpolate', function ($compile, $jopier, $interpolate) {
+        .
+        directive('jopier', ['$compile', '$jopier', '$interpolate', function ($compile, $jopier, $interpolate) {
             return {
                 // TODO:  change copy of an attribute (img src or translate attribute)
                 // TODO:  change copy of an expression, not of the expression itself
@@ -267,7 +284,7 @@
 
                     function createButton() {
                         if (!button) {
-                            button = $($jopier.buttonTemplate());
+                            button = $($jopier._buttonTemplate());
                             var linkFunction = $compile(button);
                             $('body').append(linkFunction(scope));
                         }
@@ -275,7 +292,7 @@
 
                     scope.showForm = function () {
                         if (!form) {
-                            form = $($jopier.formTemplate());
+                            form = $($jopier._formTemplate());
                             var linkFunction = $compile(form);
                             $('body').append(linkFunction(scope));
                         }
@@ -318,8 +335,8 @@
                         element.off('mouseleave');
                     });
                     var offsetRect = getOffsetRect(scope.attachTo);
-                    element.css('left', (offsetRect.left + $jopier.buttonOffsetLeftPixels()) + 'px');
-                    element.css('top', (offsetRect.top + $jopier.buttonOffsetTopPixels()) + 'px');
+                    element.css('left', (offsetRect.left + $jopier._buttonOffsetLeftPixels()) + 'px');
+                    element.css('top', (offsetRect.top + $jopier._buttonOffsetTopPixels()) + 'px');
 
                     scope.editContent = function () {
                         scope.showForm();
@@ -350,8 +367,8 @@
                     });
 
                     var offsetRect = getOffsetRect(scope.attachTo);
-                    element.css('left', (offsetRect.left + $jopier.formOffsetLeftPixels()) + 'px');
-                    element.css('top', (offsetRect.top + $jopier.formOffsetTopPixels()) + 'px');
+                    element.css('left', (offsetRect.left + $jopier._formOffsetLeftPixels()) + 'px');
+                    element.css('top', (offsetRect.top + $jopier._formOffsetTopPixels()) + 'px');
 
                     scope.cancel = function () {
                         scope.content = '';
@@ -373,10 +390,5 @@
                     }
                 }
             };
-        }])
-        .filter('jopier', ['$jopier', function ($jopier) {
-            return function (key) {
-                return $jopier.synchronousContent(key); // Of course no real synchronous ajax call is made, but will return an error if attempted.  Needs config to have preload=true.
-            }
         }]);
 })();

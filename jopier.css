@@ -49,8 +49,8 @@
 
 .jopier-button {
     position:absolute;
-    left: -10px;
-    top: -25px;
+    left: -10px; /* Overriden in Javascript */
+    top: -25px; /* Overriden in Javascript */
     font-size: 10px;
     background-color: #001888;
     color: white;
@@ -72,7 +72,6 @@
     position:absolute;
     width : 350px;
     height : 315px;
-/*    padding : 5px;*/
     resize : both;
     overflow: auto;
     border-style: solid;
