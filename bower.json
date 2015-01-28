@@ -1,6 +1,6 @@
 {
   "name": "jopier",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "homepage": "https://github.com/FranzZemen/jopier",
   "authors": [
     "FranzZemen <franzzemen@gmail.com>"
@@ -11,8 +11,8 @@
     "angular",
     "frontend",
     "content",
-    "management",
-    "wysiwyg"
+    "wysiwyg",
+    "cms"
   ],
   "license": "MIT",
   "ignore": [
