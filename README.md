@@ -321,7 +321,7 @@ You don't need to worry about the mongo database if you use the optional jopierR
    - Status 200 if found, status 404 if content not found with specific message "No content found" to distinguish from an endpoint not found, status 500 - server error
 
   - **POST /jopier/:key**
-   - Saves the specific content.  The body is the json content, and the key is the path parameter.  Note that the client can also send other stuff such as the authToken, but jopierREST middleware does not concern itself with that.
+   - Saves the specific content.  The body is json and contains {content: 'content'} and the key is the path parameter.  Note that the client can also send other stuff such as the authToken, but jopierREST middleware does not concern itself with that.
    - Status 200 if successful.  Status 400 if body or key are empty or missing.   
    
 #### Mongo Database Schema
