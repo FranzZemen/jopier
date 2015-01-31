@@ -8,19 +8,19 @@
     function getOffsetRect(element) {
         var htmlElement = element[0];
         // (1) Get the enclosing rectangle.
-        var box = htmlElement.getBoundingClientRect()
-        var body = document.body
-        var docElem = document.documentElement
+        var box = htmlElement.getBoundingClientRect();
+        var body = document.body;
+        var docElem = document.documentElement;
         // (2) Calculate the page scroll. All browsers except IE<9 support `pageXOffset/pageYOffset`, and in IE when DOCTYPE is set, the scroll can be taken from documentElement(<html>), otherwise from `body` - so we take what we can.
-        var scrollTop = window.pageYOffset || docElem.scrollTop || body.scrollTop
-        var scrollLeft = window.pageXOffset || docElem.scrollLeft || body.scrollLeft
+        var scrollTop = window.pageYOffset || docElem.scrollTop || body.scrollTop;
+        var scrollLeft = window.pageXOffset || docElem.scrollLeft || body.scrollLeft;
         // (3) The document (`html` or `body`) can be shifted from left-upper corner in IE. Get the shift.
-        var clientTop = docElem.clientTop || body.clientTop || 0
-        var clientLeft = docElem.clientLeft || body.clientLeft || 0
+        var clientTop = docElem.clientTop || body.clientTop || 0;
+        var clientLeft = docElem.clientLeft || body.clientLeft || 0;
         // (4) Add scrolls to window-relative coordinates and substract the shift of `html/body` to get coordinates in the whole document.
-        var top = box.top + scrollTop - clientTop
-        var left = box.left + scrollLeft - clientLeft
-        return {top: Math.round(top), left: Math.round(left)}
+        var top = box.top + scrollTop - clientTop;
+        var left = box.left + scrollLeft - clientLeft;
+        return {top: Math.round(top), left: Math.round(left)};
     }
 
     angular.module('jopier', [])
@@ -106,12 +106,12 @@
                         success(function (data, status, headers, config) {
                             cachedContent = data;
                             preloading = false;
-                            console.log('Preload millis: ' + (Date.now()-start));
+                            console.log('Preload millis: ' + (Date.now() - start));
                         }).error(function (data, status, headers, config) {
                             var err = new Error('Could not preload (' + status + '): ' + data);
                             console.log(err);
                             preloading = false;
-                            console.log('Preload millis: ' + (Date.now()-start));
+                            console.log('Preload millis: ' + (Date.now() - start));
                         });
                 }
                 this._formTemplate = function () {
@@ -145,7 +145,7 @@
                             $http.post(uri, {content: content, authToken: authToken}).
                                 success(function (data, status, headers, config) {
                                     cache(key, content);
-                                    console.log('Post Content millis: ' + (Date.now()-start));
+                                    console.log('Post Content millis: ' + (Date.now() - start));
                                     resolve('Success');
                                 }).error(function (data, status, headers, config) {
                                     var err = new Error('Status ' + status + ': ' + data.message);
@@ -162,7 +162,7 @@
                                     } else {
                                         var resolvedContent = cache(key);
                                         if (resolvedContent) {
-                                            console.log('Get Content (Cache) millis: ' + (Date.now()-start));
+                                            console.log('Get Content (Cache) millis: ' + (Date.now() - start));
                                             resolve(resolvedContent);
                                         }
                                         if (!resolvedContent) {
@@ -170,7 +170,7 @@
                                             $http.get(uri).
                                                 success(function (data, status, headers, config) {
                                                     cache(key, data.content);
-                                                    console.log('Get Content millis: ' + (Date.now()-start));
+                                                    console.log('Get Content millis: ' + (Date.now() - start));
                                                     resolve(data.content);
                                                 }).error(function (data, status, headers, config) {
                                                     if (status == 404 && typeof data === 'string' && data.indexOf('No content found for key') === 0) {
@@ -182,7 +182,7 @@
                                                 });
                                         }
                                     }
-                                },delay);
+                                }, delay);
                             })();
                         });
                     }
@@ -244,11 +244,43 @@
             }];
         }
     )
+
+        // ====================
+        // Scrollable Directive
+        // ====================
+        .directive('jopierScrollable', ['$jopier', function ($jopier) {
+            return {
+                // Use this diretive on elements that are scrollable, if they include jopier directives.
+                // The scroll event on an element does not bubble to the window, so we need
+                // to handle scrollable parent elements in order to keep jopier buttons and forms properly
+                // positioned.  Scope is not isolate, so doesn't interfere with child contents.
+
+                restrict: 'A',
+                link: function (scope, element, attrs) {
+                    // Always listen to scrolling events, but only broadcast on the current scope
+                    // if jopier is active.
+
+                    // Listen on 'this' element scrolling, because element scrolling does not bubble up per spec.
+                    element.on('scroll', broadcastScroll);
+
+                    function broadcastScroll() {
+                        if ($jopier.active()) {
+                            scope.$broadcast('jopier-scroll');
+                        }
+                    }
+
+
+                    element.on('$destroy', function () {
+                        element.off('scroll', broadcastScroll);
+                    });
+                }
+            };
+        }])
         // ================
         // Jopier Directive
         // ================
-        .
-        directive('jopier', ['$compile', '$jopier', '$interpolate', function ($compile, $jopier, $interpolate) {
+
+        .directive('jopier', ['$compile', '$jopier', '$interpolate', function ($compile, $jopier, $interpolate) {
             return {
                 // TODO:  change copy of an attribute (img src or translate attribute)
                 // TODO:  change copy of an expression, not of the expression itself
@@ -274,6 +306,15 @@
                         scope.key = 'BAD_KEY';
                     }
 
+                    element.on('scroll', function () {
+                        console.log('element scrolling');
+                    });
+
+                    $(window).on('scroll', function () {
+                        console.log('element scrolling via window');
+                    });
+
+
                     // Now for the magic; set the contet...
                     setContent();
 
@@ -293,25 +334,42 @@
                                 element.html('Error loading content for key (see console logs): ' + scope.key);
                             }
                         );
-                    };
+                    }
 
-                    var deregisterUpdate = scope.$on('jopier-update', function (event,updatedKey) {
+                    var deregisterUpdate = scope.$on('jopier-update', function (event, updatedKey) {
                         // Handle more than one element having the same key.
                         if (scope.key === updatedKey) {
                             setContent();
                         }
                     });
 
-                    function activate (onOff) {
+                    function repositionHandler() {
+                        if (button) {
+                            button.reposition();
+                        }
+                    }
+
+                    var deregisterWatch;
+
+                    function activate(onOff) {
                         if (onOff) {
                             createButton();
                             element.addClass('jopier-target');
-                            scope.renderButton = true;
-
+                            renderButton(true);
+                            deregisterWatch = scope.$watchCollection(function () {
+                                return getOffsetRect(element);
+                            }, function (newVal, oldVal) {
+                                if (!(newVal.top === oldVal.top && newVal.left === oldVal.left)) {
+                                    console.log('change detected')
+                                }
+                            });
                         } else {
                             element.removeClass('jopier-target');
-                            scope.renderButton = false;
-                            scope.renderForm = false;
+                            renderButton(false);
+                            renderForm(false);
+                            if (deregisterWatch) {
+                                deregisterWatch();
+                            }
                         }
                     }
 
@@ -323,13 +381,6 @@
                         activate(true);
                     });
 
-                    function createButton() {
-                        if (!button) {
-                            button = $($jopier._buttonTemplate());
-                            var linkFunction = $compile(button);
-                            $('body').append(linkFunction(scope));
-                        }
-                    }
 
                     scope.showForm = function () {
                         if (!form) {
@@ -338,7 +389,7 @@
                             $('body').append(linkFunction(scope));
                         }
                         scope.content = '...loading';
-                        scope.renderForm = true;
+                        renderForm(true);
                         $jopier.content(scope.key).then(
                             function (content) {
                                 if (content) {
@@ -352,7 +403,7 @@
                                     if (scope.attachTo.html().trim().length > 0) {
                                         scope.content = scope.attachTo.html().trim();
                                     } else {
-                                        secope.content='';
+                                        secope.content = '';
                                     }
                                 }
                             },
@@ -365,38 +416,110 @@
                     };
 
                     element.on('$destroy', function () {
-                        deregisterHide();
-                        deregisterShow();
-                        deregisterUpdate();
+                        if (deregisterHide) {
+                            deregisterHide();
+                            deregisterHide = undefined;
+                        }
+                        if (deregisterShow) {
+                            deregisterShow();
+                            deregisterShow = undefined;
+                        }
+                        if (deregisterUpdate) {
+                            deregisterUpdate();
+                            deregisterUpdate = undefined;
+                        }
                     });
+
+                    scope.$on('$destroy', function () {
+                        // Since the form and button are not within the dom, remove these here when the scope is destroyed
+                        if (button) {
+                            button.remove();
+                            button = undefined;
+                        }
+                        if (form) {
+                            form.remove();
+                            form = undefined;
+                        }
+                        if (deregisterWatch) {
+                            deregisterWatch();
+                            deregisterWatch = undefined;
+                        }
+                    });
+
+                    function createButton() {
+                        if (!button) {
+                            button = $($jopier._buttonTemplate());
+                            var linkFunction = $compile(button);
+                            $('body').append(linkFunction(scope));
+                        }
+                    }
+
+
+                    function renderButton(activated) {
+                        // Buttons have been activated, but there are conditions under which they should still not render.
+                        scope.renderButton = (activated && scope.attachTo.is(':visible')) ? true : false;
+                    }
+
+                    function renderForm(activated) {
+                        scope.renderForm = (activated && scope.attachTo.is(':visible')) ? true : false;
+                    }
                 }
             };
         }])
         // =======================
         // Jopier Button Directive
         // =======================
+
         .directive('jopierButton', ['$jopier', function ($jopier) {
             return {
                 restrict: 'C',
                 link: function (scope, element, attrs) {
+
+                    reposition();
+
+                    element.mouseleave(function () {
+                        scope.attachTo.removeClass('jopier-target-hover');
+                    });
+
                     element.mouseover(function () {
                         scope.attachTo.addClass('jopier-target-hover');
                     });
-                    element.mouseleave(function () {
-                        scope.attachTo.removeClass('jopier-target-hover');
+
+                    var deRegisterJopierScroll = scope.$on('jopier-scroll', function () {
+                        if ($jopier.active()) {
+                            reposition();
+                        }
+                    });
+
+                    // Listen to window scroll and resize, namespaced to this key
+                    var scrollEventNamespace = 'scroll.' + scope.key.replace('.','_') + 'button';
+                    var resizeEventNamespace = 'resize.' + scope.key.replace('.','_') + 'button';
+                    $(window).on(scrollEventNamespace, reposition);
+                    $(window).on(resizeEventNamespace, reposition);
+
+                    scope.$on('$destroy', function () {
+                        deRegisterJopierScroll();
                     });
                     element.on('$destroy', function () {
                         element.off('mouseover');
                         element.off('mouseleave');
+                        $(window).off(scrollEventNamespace);
+                        $(window).off(resizeEventNamespace);
                     });
-                    var offsetRect = getOffsetRect(scope.attachTo);
-                    element.css('left', (offsetRect.left + $jopier._buttonOffsetLeftPixels()) + 'px');
-                    element.css('top', (offsetRect.top + $jopier._buttonOffsetTopPixels()) + 'px');
+
+
+                    function reposition() {
+                        if ($jopier.active()) {
+                            var offsetRect = getOffsetRect(scope.attachTo);
+                            element.css('left', (offsetRect.left + $jopier._buttonOffsetLeftPixels()) + 'px');
+                            element.css('top', (offsetRect.top + $jopier._buttonOffsetTopPixels()) + 'px');
+                            element.css('opacity', .75);
+                        }
+                    }
 
                     scope.editContent = function () {
                         scope.showForm();
                     };
-
                 }
             };
         }])
@@ -415,15 +538,39 @@
                         scope.attachTo.removeClass('jopier-target-hover');
                     });
 
+                    var deRegisterJopierScroll = scope.$on('jopier-scroll', function () {
+                        if ($jopier.active()) {
+                            reposition();
+                        }
+                    });
 
+                    // Listen to window scroll and resize, namespaced to this key
+                    var scrollEventNamespace = 'scroll.' + scope.key.replace('.','_') + 'form';
+                    var resizeEventNamespace = 'resize.' + scope.key.replace('.','_') + 'form';
+
+                    $(window).on(scrollEventNamespace, reposition);
+                    $(window).on(resizeEventNamespace, reposition);
+
+                    scope.$on('$destroy', function () {
+                        deRegisterJopierScroll();
+                    });
                     element.on('$destroy', function () {
                         element.off('mouseover');
                         element.off('mouseleave');
+                        $(window).off(scrollEventNamespace);
+                        $(window).off(resizeEventNamespace);
                     });
 
-                    var offsetRect = getOffsetRect(scope.attachTo);
-                    element.css('left', (offsetRect.left + $jopier._formOffsetLeftPixels()) + 'px');
-                    element.css('top', (offsetRect.top + $jopier._formOffsetTopPixels()) + 'px');
+                    reposition();
+
+
+
+
+                    function reposition() {
+                        var offsetRect = getOffsetRect(scope.attachTo);
+                        element.css('left', (offsetRect.left + $jopier._formOffsetLeftPixels()) + 'px');
+                        element.css('top', (offsetRect.top + $jopier._formOffsetTopPixels()) + 'px');
+                    }
 
                     scope.cancel = function () {
                         scope.content = '';

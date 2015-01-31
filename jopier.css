@@ -28,7 +28,7 @@
 
 .jopier-form textarea {
     resize: both; /* Javascript sizes */
-    height: 200px;
+    height: 240px;
 }
 
 .jopier-form-title {
@@ -53,6 +53,8 @@
     top: -25px; /* Overriden in Javascript */
     font-size: 10px;
     background-color: #001888;
+    padding: 5px;
+    margin:0;
     color: white;
     z-index: 1000;
 }
@@ -61,7 +63,6 @@
     border-color: #001888;
     border-style: dotted;
     border-width: 1px;
-    padding: 5px;
 }
 .jopier-target-hover {
     color: black;
