@@ -302,7 +302,7 @@
                         console.log('matches');
                         scope.key = $interpolate(scope.key)(scope.$parent);
                     }
-                    if (!/^([a-z0-9]+\.)*[a-z0-9]+$/i.test(scope.key)) {
+                    if (!/^([a-z0-9_]+\.)*[a-z0-9_]+$/i.test(scope.key)) {
                         scope.key = 'BAD_KEY';
                     }
 
@@ -326,7 +326,9 @@
                                 if (content.indexOf('No content found') === 0 && scope.attachTo.html().trim().length > 0) {
                                     // Do nothing. The content will be the element html
                                 } else {
-                                    element.html(content);
+                                    element.html('');
+                                    element.append($compile(angular.element('<span>' + content + '</span>'))(scope));
+                                    //element.html(content);
                                 }
                             },
                             function (err) {
