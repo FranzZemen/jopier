@@ -175,6 +175,8 @@
                                                 }).error(function (data, status, headers, config) {
                                                     if (status == 404 && typeof data === 'string' && data.indexOf('No content found for key') === 0) {
                                                         resolve('No content found for key ' + key + '. To add entry, replace this message with content and save');
+                                                    } else if (status == 503) {
+                                                        resolve('Error:  Server side CMS is not available');
                                                     } else {
                                                         var err = new Error('Status ' + status + ': ' + data.message);
                                                         reject(err);
@@ -327,8 +329,11 @@
                                     // Do nothing. The content will be the element html
                                 } else {
                                     element.html('');
-                                    element.append($compile(angular.element('<span>' + content + '</span>'))(scope));
-                                    //element.html(content);
+                                    var contentRawDOM = $.parseHTML(content);
+                                    var contentDOM = angular.element(contentRawDOM);
+                                    element.append(contentDOM);
+                                    $compile(contentDOM)(scope);
+                                    //element.append($compile(contentDOM)(scope));
                                 }
                             },
                             function (err) {

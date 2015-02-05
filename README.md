@@ -11,6 +11,13 @@ The front end is built in Angular (currently supporting 1.3.x).  Therefore, the 
 ## Features
 ---
 **jopier** (front end)
+
+  * **Since 0.0.9 **
+  1. Fixed positioning issues on resize
+  2. If cms is contained within a hiearchy where a parent element is scrollable, add directive jopierScrollable to scrollable element to inform jopier controls to reposition on scroll.  This is because element scroll events do not bubble to where they can be automatically handled.
+  3. In addition to normal html elements, your contained content can now have other angular directives, including other jopier directives.  Jopier will compile your content so that any contained element will have compiled directives.  For jopier, this allows you to have sub-content areas.
+
+  * **Since 0.0.8**
   1. API providing toggling of editing mode on or off.
   2. Directive allowing any element's html to be content managed, in place.
   3. Pulls content from html markup when it doesn't exist.  This is a wonderful feature for existing sites - just add the directive and your content will be pulled from what you already have published in html.  Thereafter, it ignores pre-existing html content of a element with the jopier directive.
@@ -78,7 +85,9 @@ Skip any that you already have
             'other modules....']);
   4. Add a control to turn jopier on or off.  You can add the example button or use an existing menu system.
          <button ng-click="toggleJopier()">Toggle Jopier</button>
-  5. Provide the implementation for toggleJoppier() in a controller or directive, at your option.  :
+  5. If your jopier elements are contained within a scrollable parent (other than the document), place the directive
+     jopierScrollable on the scrollable element.  This will cause jopier buttons (when active) to properly reposition on scroll.
+  6. Provide the implementation for toggleJoppier() in a controller or directive, at your option.  :
 
         (function() {
             'use strict';
@@ -95,12 +104,12 @@ Skip any that you already have
             }]);
         })();
 
-  6. Select an html element you want content managed.  Add the jopier attribute directive with a key.
+  7. Select an html element you want content managed.  Add the jopier attribute directive with a key.
           <span jopier="INTRO">This was text that was there before Jopier</span>
-  7. Build and deploy your front end in whichever way you normally do.
-  8. In your browser/site, go to the control you setup above and turn Joppier on.  A Joppier button should show up near the element where we added the jopier directive.
-  9. Click on that button, a form should appear.  It should contain the key 'INTRO', and the inital (unsaved) contents will be the original contents of the element, or "This was text taht was there before Jopier".  Change it and save.  Reload your browser, and voila, you should see the new text.
-  10. Open a mongo client and run:
+  8. Build and deploy your front end in whichever way you normally do.
+  9. In your browser/site, go to the control you setup above and turn Joppier on.  A Joppier button should show up near the element where we added the jopier directive.
+  10. Click on that button, a form should appear.  It should contain the key 'INTRO', and the inital (unsaved) contents will be the original contents of the element, or "This was text taht was there before Jopier".  Change it and save.  Reload your browser, and voila, you should see the new text.
+  11. Open a mongo client and run:
           use jopier
           db.jopier.find()
    Your content should be there.
