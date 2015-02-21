@@ -1,12 +1,12 @@
 {
   "name": "jopier",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "homepage": "https://github.com/FranzZemen/jopier",
   "authors": [
     "FranzZemen <franzzemen@gmail.com>"
   ],
   "description": "Front End Content Manager",
-  "main": "jopier.js",
+  "main": ["jopier.js","jopier.css"],
   "keywords": [
     "angular",
     "frontend",
