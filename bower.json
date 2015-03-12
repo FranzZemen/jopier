@@ -1,18 +1,18 @@
 {
   "name": "jopier",
-  "version": "0.0.5",
+  "version": "0.0.10",
   "homepage": "https://github.com/FranzZemen/jopier",
   "authors": [
     "FranzZemen <franzzemen@gmail.com>"
   ],
   "description": "Front End Content Manager",
-  "main": "jopier.js",
+  "main": ["jopier.js","jopier.css"],
   "keywords": [
     "angular",
     "frontend",
     "content",
-    "management",
-    "wysiwyg"
+    "wysiwyg",
+    "cms"
   ],
   "license": "MIT",
   "ignore": [

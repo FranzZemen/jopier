@@ -1,7 +1,7 @@
 # Jopier
 ---
 
-Jopier is a lightweight end to end Content Management System (CMS) for use in websites 
+Jopier is a lightweight end to end Content Management System (CMS) for use in websites
 web applications and hybrid apps.
 
 It consists of both a front end, pubished on Bower as 'jopier', and a back end, published on NPM as jopier-rest.  Both can be used independently with custom implementations providing 'the other side' but it is likely that most users will simply use jopier and jopier-rest.
@@ -11,6 +11,13 @@ The front end is built in Angular (currently supporting 1.3.x).  Therefore, the 
 ## Features
 ---
 **jopier** (front end)
+
+  * **Since 0.0.9 **
+  1. Fixed positioning issues on resize
+  2. If cms is contained within a hiearchy where a parent element is scrollable, add directive jopierScrollable to scrollable element to inform jopier controls to reposition on scroll.  This is because element scroll events do not bubble to where they can be automatically handled.
+  3. In addition to normal html elements, your contained content can now have other angular directives, including other jopier directives.  Jopier will compile your content so that any contained element will have compiled directives.  For jopier, this allows you to have sub-content areas.
+
+  * **Since 0.0.8**
   1. API providing toggling of editing mode on or off.
   2. Directive allowing any element's html to be content managed, in place.
   3. Pulls content from html markup when it doesn't exist.  This is a wonderful feature for existing sites - just add the directive and your content will be pulled from what you already have published in html.  Thereafter, it ignores pre-existing html content of a element with the jopier directive.
@@ -32,7 +39,7 @@ The front end is built in Angular (currently supporting 1.3.x).  Therefore, the 
   2. MongoDB storage
   3. Ability to segregate content for different sites or endpoints
   4. Can be replaced with any other custom REST implementation.  Nothing magic about internals.
-  
+
 
 ## Default Usage
 ---
@@ -40,29 +47,30 @@ This step by step is the quickest way to get started.  Depending on your current
 ### Pre-requisites
 Skip any that you already have
   1. Vanilla version of MongoDB (installed on same host as node, port 27017)
-  2. Node installed 
+  2. Node installed
   3. ExpressJS installed and setup in Node
   4. Angular installed in your site
     * If you're new to angular, or your site doesn't currently use angular, you simply need to include the angular.js (see https://angularjs.org/) and:
       * Add this to your html:
              <html ng-app="someAppName">
       * Add this toyour javascript:
-             angular.module('someAppName', ['jopier']); 
+             angular.module('someAppName', ['jopier']);
 
 ### Usage
 **Server Side**
-  1. Install jopier-rest 
-     * Install from npm 
+  1. Install jopier-rest
+     * Install from npm
            npm install jopier-rest --save
      * Require and setup in module where you add middleware (for example, in angular-fullstack that's either app.js or routes.js)
            var Jopier = require('jopier-rest')
            var jopier = new Jopier();
            // or
            var jopier = new (require('jopier-rest'))();
-  2. Add the jopier middleware to Express wherever you'd like (app or route level)
-         app.use(jopier.allPath()).get(jopier.all);
-         app.use(jopier.getPath()).get(jopier.get);
-         app.use(jopier.postPath()).post(jopier.post);
+  2. Add the jopier middleware to Express wherever you'd like (app or route level).  The order is important.  The getPath is more specific than the allPath so it must come first.
+
+         app.get(jopier.getPath(),jopier.get);
+         app.get(jopier.allPath(),jopier.all);
+         app.post(jopier.postPath(),jopier.post);
 
 **Front End**
   1. Get jopier (bower is recommended - it points to the lastest stable tag)
@@ -72,13 +80,15 @@ Skip any that you already have
   2. Include jopier.js and jopier.css in your index.html or follow whatever build process you already use.
   3. Per pre-requisites above, make sure your angular app module includes 'jopier' as a module dependency:
          angular.module('yourAppName', [
-            'other modules....',  
+            'other modules....',
             'jopier',
             'other modules....']);
-  4. Add a control to turn jopier on or off.  You can add the example button or use an existing menu system. 
+  4. Add a control to turn jopier on or off.  You can add the example button or use an existing menu system.
          <button ng-click="toggleJopier()">Toggle Jopier</button>
-  5. Provide the implementation for toggleJoppier() in a controller or directive, at your option.  :
-  
+  5. If your jopier elements are contained within a scrollable parent (other than the document), place the directive
+     jopierScrollable on the scrollable element.  This will cause jopier buttons (when active) to properly reposition on scroll.
+  6. Provide the implementation for toggleJoppier() in a controller or directive, at your option.  :
+
         (function() {
             'use strict';
 
@@ -94,77 +104,89 @@ Skip any that you already have
             }]);
         })();
 
-  6. Select an html element you want content managed.  Add the jopier attribute directive with a key.
+  7. Select an html element you want content managed.  Add the jopier attribute directive with a key.
           <span jopier="INTRO">This was text that was there before Jopier</span>
-  7. Build and deploy your front end in whichever way you normally do.
-  8. In your browser/site, go to the control you setup above and turn Joppier on.  A Joppier button should show up near the element where we added the jopier directive.  
-  9. Click on that button, a form should appear.  It should contain the key 'INTRO', and the inital (unsaved) contents will be the original contents of the element, or "This was text taht was there before Jopier".  Change it and save.  Reload your browser, and voila, you should see the new text.
-  10. Open a mongo client and run:
+  8. Build and deploy your front end in whichever way you normally do.
+  9. In your browser/site, go to the control you setup above and turn Joppier on.  A Joppier button should show up near the element where we added the jopier directive.
+  10. Click on that button, a form should appear.  It should contain the key 'INTRO', and the inital (unsaved) contents will be the original contents of the element, or "This was text taht was there before Jopier".  Change it and save.  Reload your browser, and voila, you should see the new text.
+  11. Open a mongo client and run:
           use jopier
           db.jopier.find()
-   Your content should be there.  
+   Your content should be there.
 
 ## Detailed Documentation
 ---
 
 ### Angular Side (jopier module)
-At this time, the angular side includes a directive, a service and a service provider (for site configuration).  
+At this time, the angular side includes a directive, a service and a service provider (for site configuration).
 
 #### Install
 
     bower install jopier
 
+#### Directive jopierScrollable
+Place this directive on scrollable elements that contain content managed child elements.
+
+The scroll event on an element does not bubble (as opposed to the scroll on the document).  This directive on the
+scrollable element (for example with style overflow: auto) listens for the event and broadcasts in on its scope.  Jopier
+related directives on content managed elements listen for this so that they can behave properly  when they are
+contained within a scrollable parent.
+
+This is not necessary for normal page scrolling (when the document itself scrolls) as the jopier can listen for the
+scroll event on the window.
+
+
 #### Directive jopier
-The jopier directive:
+The main jopier directive for use by client software.
   - Is restricted to A (attribute)
   - Has an isolated scope
   - Operates at priority 10
 
 You can turn any element's contained html into  managed content by adding the jopier attribute to that element, thus activating the jopier directive.  Content is idenfied by a key, either as an attribute or contained within the element:
 
-        <some-element jopier key="SOME_KEY"></some-element> 
+        <some-element jopier key="SOME_KEY"></some-element>
         or
         <some-element jopier>SOME_KEY</some-element>
 
-The difference between these two approaches has consequences with respect to first time initialization.  When the key is defined in the attribute, but the content is not yet managed (as in, you just added the key and deployed), jopier will use the html contents of the element as the initial content value. This is highly beneficial for existing markup that has explicit copy in it.  
-  
-Keys must be assignable as JSON keys.  Keys can be hierarchical, and hierarchy is separated by ".".  For instance KEY_LEVEL_2.KEY_LEVEL_3.KEY_3.  See the mongo section below to view the default implementaton in the database.     
+The difference between these two approaches has consequences with respect to first time initialization.  When the key is defined in the attribute, but the content is not yet managed (as in, you just added the key and deployed), jopier will use the html contents of the element as the initial content value. This is highly beneficial for existing markup that has explicit copy in it.
+
+Keys must be assignable as JSON keys.  Keys can be hierarchical, and hierarchy is separated by ".".  For instance KEY_LEVEL_2.KEY_LEVEL_3.KEY_3.  See the mongo section below to view the default implementaton in the database.
 
 Note that in both cases an expression can be subsituted:
 
-    <some-element jopier key="{{someKeyExp}}"></some-element> 
+    <some-element jopier key="{{someKeyExp}}"></some-element>
     or
     <some-element jopier>{{someKeyExp}}</some-element>
 
 #### Service $jopier
 The $jopier service has the following methods intended for client usage:
-  - **$jopier.content(key)**:  
+  - **$jopier.content(key)**:
    - Retrieve the content for a given key.
    - Returns an angular promise
-  
-  - **$jopier.authToken(token)**:  
-   - Allows the client to inject an optional authToken into the service so that any content updates can be authenticated/authorized on the server side.  Content requests are not authenticated at this time (they are the equivalent as getting your html).  
-   - You should initialize this value in a controller or other service, so that it is set prior to a user actually initiating a change.  Your client is responsible for authenticating against your server and obtaining whatever authentication token you required, so you'd likely set this prior to the user editing content but just on/after successful authentication.  
+
+  - **$jopier.authToken(token)**:
+   - Allows the client to inject an optional authToken into the service so that any content updates can be authenticated/authorized on the server side.  Content requests are not authenticated at this time (they are the equivalent as getting your html).
+   - You should initialize this value in a controller or other service, so that it is set prior to a user actually initiating a change.  Your client is responsible for authenticating against your server and obtaining whatever authentication token you required, so you'd likely set this prior to the user editing content but just on/after successful authentication.
    - The token is passed as json in the body, and thus available on your server side for whatever authorization middleware you use.  jopier-rest does nothing with this token.  Since it is represented by json, you can pass just about anything.
    - returns Self
-   
+
   - **$jopier.toggleActive(onOff)**:
    - Allows client to turn on/off cms editing
    - No return value
    - Returns self
   - **jopier.active()**:
    - Returns the current cms editing state (on = true)
-   
+
 
 #### Provider $jopierProvider
 The $jopierProvider allows you to perform site specific configuration.  It contains the following methods:
 
-  - **$jopierProvider.preload(trueOrFalse)**:  
+  - **$jopierProvider.preload(trueOrFalse)**:
    - getter/setter method for preload.  When set, preloads content upon initialization.   Preload queues without blocking individual content requests until its complete, as those subsequently quued requests will likely come from the preload cache.
    - default value is true
    - getter returns current value
   - **$jopierProvider.setRestPath (path)**:
-   - getter/setter method for the base rest path to invoke the back end.  
+   - getter/setter method for the base rest path to invoke the back end.
    - default value is /jopier.  This is an absolute path, not relative to html base tag.
    - getter returns current value
   - **$jopierProvider.buttonTemplate (template)**:
@@ -270,7 +292,7 @@ The $jopierProvider allows you to perform site specific configuration.  It conta
         border-width: 1px;
         padding: 5px;
     }
-    
+
     .jopier-target-hover {
         color: black;
         background-color: #aab2e8;
@@ -305,11 +327,11 @@ Usage in Express is straightfoward.  The Jopier class exposes a path for each op
 
 ##### Optional parameters
 
-  - **siteKey**:  
-   - An optional key to use as the mongo enry document identifier.  
-   - Default is the inbound base path 
-  -  **bunyanStreams**:  
-   - An optional specification for logs.  The log system used is bunyan, so this is simply the streams option from that package.  
+  - **siteKey**:
+   - An optional key to use as the mongo enry document identifier.
+   - Default is the inbound base path
+  -  **bunyanStreams**:
+   - An optional specification for logs.  The log system used is bunyan, so this is simply the streams option from that package.
    - Default is stdout, level info
   - **basePath**:
    - The base path and what the allPath method returns.  The getPath and postPath method return and additional path parameter of /:key
@@ -321,17 +343,23 @@ Usage in Express is straightfoward.  The Jopier class exposes a path for each op
    -  The mongo collection to use.
    -  Default is jopier
 
+##### Methods
+
+  - **Jopier.getPath(), Jopier.allPath(), Jopier.postPath()**
+   - These three methods are for includsion in app.get/post or app.route.get/post respectively, per the quick usage example above.  The order matters as the only difference
+   between the getPath and the allPath is a path parameter.
+  - **Jopier.get(), Jopier,all(), Jopier.post()**
+   - These three method are the implementations for Express, per the quick usage example above.  They correspond to the path counterparts.
+
 
 #### REST Interface
 
 You don't need to worry about the mongo database if you use the optional jopier-rest backend.  However, it is documented here if needed.  Note that a custom implementatoin can change the paths.
 
-##### Get All Content API
-
   - **GET /jopier **
    - Returns the full hierarchical JSON document as defined in the mongo section below
    - Status 200 if found, status 404 if content not found with specific message "No content found" to distinguish from an endpoint not found, status 500 - server error
-   
+
   - **GET /jopier/:key**
    - Returns the specific JSON content for the key:
     - {key: 'key', content: 'content'}
@@ -339,8 +367,8 @@ You don't need to worry about the mongo database if you use the optional jopier-
 
   - **POST /jopier/:key**
    - Saves the specific content.  The body is json and contains {content: 'content'} and the key is the path parameter.  Note that the client can also send other stuff such as the authToken, but jopier-rest middleware does not concern itself with that.
-   - Status 200 if successful.  Status 400 if body or key are empty or missing.   
-   
+   - Status 200 if successful.  Status 400 if body or key are empty or missing.
+
 #### Mongo Database Schema
 
 You don't need to worry about the mongo database if you use the optional jopier-rest backend.  However, it is documented here if needed.  Basically there are two required fields, namely siteKey and content.  siteKey stores the key that was provided either optionally or by default. This is so that those wanting to segregate content somehow into different document instances can do so.   The content fields contains any number of keys, which may be hierarchical.  For instance below, the key KEY_LEVEL_2.KEY_LEVEL_3.KEY_3 is three levels deep and points to 'Some Content 3'.
@@ -362,19 +390,19 @@ You don't need to worry about the mongo database if you use the optional jopier-
 ---
 A partial product backlog is provided here.  These are the public facing epics or stories that may be of interest.  Please do let me know if you have additional suggestions.
 
-  1. Optional Grunt task to operate on html files server side to pre-initialize content instead of having client bulk load content on startup. 
+  1. Optional Grunt task to operate on html files server side to pre-initialize content instead of having client bulk load content on startup.
   2. Angular interpolation and compilation of markup, in the case where new content contains angular directives etc. *
   2. Finer grained bulk loading, for instance to load content only included in the current views etc.
   3. Provide a filter to be used when the directive form is not convenient.
   4. Use a wysiwig editor in the form
 
-   
 
 
 
 
-    
-    
-    
-    
- 
+
+
+
+
+
+
